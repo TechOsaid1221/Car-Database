@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurboSpec | Live Global Database</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-accent: #ff3b30;
+            --bg-dark: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-main: #ffffff;
+            --text-secondary: #8e8e93;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: rgba(15, 15, 15, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 1rem 0;
+        }
+        .navbar-brand { font-weight: 700; letter-spacing: -0.5px; font-size: 1.5rem; }
+        .brand-dot { color: var(--primary-accent); }
+
+        /* Hero */
+        .hero {
+            padding: 4rem 0 2rem;
+            text-align: center;
+            background: radial-gradient(circle at center, #2a2a2a 0%, #0f0f0f 70%);
+        }
+        .hero h1 {
+            font-weight: 700;
+            font-size: 3rem;
+            background: linear-gradient(to right, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Tabs */
+        .nav-pills .nav-link {
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        .nav-pills .nav-link:hover, .nav-pills .nav-link.active {
+            background-color: var(--text-main);
+            color: var(--bg-dark);
+            border-color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* Card */
+        .car-card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            height: 100%;
+        }
+        .car-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .img-container {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background-color: #000;
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-body { padding: 1.25rem; }
+        .car-category {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-accent);
+            font-weight: 700;
+        }
+        .car-title { font-size: 1.2rem; font-weight: 600; margin: 0.2rem 0; }
+        .car-meta { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* FAB & Modal */
+        .fab-btn {
+            position: fixed; bottom: 30px; right: 30px;
+            background-color: var(--primary-accent); color: white;
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; border: none; z-index: 1000;
+            box-shadow: 0 10px 20px rgba(255, 59, 48, 0.3);
+            transition: transform 0.3s;
+        }
+        .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
+
+        .modal-content { background-color: #1e1e1e; border: 1px solid rgba(255,255,255,0.1); }
+        .form-control, .form-select { background-color: #2a2a2a; border: 1px solid #444; color: white; }
+        .form-control:focus { background-color: #333; border-color: var(--primary-accent); color: white; box-shadow: none; }
+
+        /* Loader */
+        #loader { text-align: center; padding: 50px; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">TurboSpec<span class="brand-dot">.</span> <span style="font-size: 0.8rem; font-weight: 400; color: #666;">Global</span></a>
+            <div class="ms-auto">
+                <button class="btn btn-outline-light btn-sm rounded-pill px-4" onclick="openUploadModal()">
+                    <i class="fas fa-plus me-2"></i>Add Car
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero & Tabs -->
+    <section class="hero">
+        <div class="container">
+            <h1>Global Garage</h1>
+            <p class="text-secondary mb-4">Real-time uploads from enthusiasts worldwide.</p>
+            <ul class="nav nav-pills justify-content-center" id="filterTabs">
+                <li class="nav-item"><button class="nav-link active" onclick="setFilter('All')">All</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="setFilter('Hyper')">Hyper</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="setFilter('Sports')">Sports</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="setFilter('City')">City</button></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Grid -->
+    <div class="container pb-5">
+        <div id="loader"><i class="fas fa-circle-notch fa-spin fa-2x"></i><br>Connecting to database...</div>
+        <div class="row g-4" id="carGrid"></div>
+    </div>
+
+    <!-- Upload Button -->
+    <button class="fab-btn" onclick="openUploadModal()"><i class="fas fa-plus"></i></button>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <img id="d-img" src="" style="width:100%; height:300px; object-fit:cover; border-radius: 16px 16px 0 0;">
+                    <div class="p-4">
+                        <span id="d-cat" class="badge bg-danger mb-2">Category</span>
+                        <h2 id="d-title" class="fw-bold mb-0">Title</h2>
+                        <p id="d-eng" class="text-secondary mb-3">Engine Spec</p>
+                        <div class="row g-3 text-center mt-2">
+                            <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary border-opacity-25"><h6>HP</h6><span id="d-hp" class="fw-bold text-white"></span></div></div>
+                            <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary border-opacity-25"><h6>0-60</h6><span id="d-acc" class="fw-bold text-white"></span></div></div>
+                            <div class="col-4"><div class="p-2 bg-dark rounded border border-secondary border-opacity-25"><h6>Top Speed</h6><span id="d-spd" class="fw-bold text-white"></span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Upload to Global DB</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="uploadForm">
+                        <select class="form-select mb-3" id="u-cat" required>
+                            <option value="Sports">Sports</option>
+                            <option value="Hyper">Hyper</option>
+                            <option value="City">City</option>
+                        </select>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="text" class="form-control" id="u-make" placeholder="Make (e.g. Audi)" required></div>
+                            <div class="col"><input type="text" class="form-control" id="u-model" placeholder="Model (e.g. R8)" required></div>
+                        </div>
+                        <input type="text" class="form-control mb-3" id="u-eng" placeholder="Engine (e.g. V10 FSI)" required>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="text" class="form-control" id="u-hp" placeholder="HP (e.g. 602)" required></div>
+                            <div class="col"><input type="text" class="form-control" id="u-acc" placeholder="0-60 (e.g. 3.1s)" required></div>
+                        </div>
+                        <input type="text" class="form-control mb-3" id="u-spd" placeholder="Top Speed (e.g. 205 mph)" required>
+                        <label class="small text-secondary mb-1">Car Photo (Max 5MB)</label>
+                        <input type="file" class="form-control mb-3" id="u-file" accept="image/*" required>
+                        <button type="submit" class="btn btn-danger w-100 fw-bold" id="submitBtn">
+                            Upload Car
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+       
+        
+        
+        // PASTE YOUR KEYS INSIDE THIS BLOCK:
+const firebaseConfig = {
+    apiKey: "AIzaSyD-YourRealKeyHere...",
+    authDomain: "turbospec.firebaseapp.com",
+    projectId: "turbospec-123",
+    storageBucket: "turbospec-123.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
+};
+
+
+
+       
+
+        // Initialize Firebase
+        // Check if config is set, otherwise alert user
+        let app, db;
+        try {
+            if (!firebaseConfig.apiKey) {
+                document.getElementById('loader').innerHTML = `<h5 class="text-warning">Config Missing!</h5><p>Open the index.html file and paste your Firebase Config keys in the script section.</p>`;
+                throw new Error("Missing Config");
+            }
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            initApp();
+        } catch (e) {
+            console.log("Waiting for config...");
+        }
+
+        // Global State
+        let allCars = [];
+        let currentFilter = 'All';
+
+        // Core Application Logic
+        function initApp() {
+            const carsRef = collection(db, 'cars'); // Simple collection name
+            
+            // Real-time Listener
+            onSnapshot(carsRef, (snapshot) => {
+                allCars = [];
+                snapshot.forEach(doc => {
+                    allCars.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort by newest in memory
+                allCars.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+                document.getElementById('loader').style.display = 'none';
+                renderCars();
+            }, (error) => {
+                console.error("Database Error:", error);
+                document.getElementById('loader').innerHTML = `<span class="text-danger">Permission Error: Make sure Firestore rules are set to Test Mode.</span>`;
+            });
+        }
+
+        // Image Compressor
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scale = 800 / img.width;
+                        canvas.width = 800;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    }
+                }
+            });
+        }
+
+        // Form Submit
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const fileInput = document.getElementById('u-file');
+            
+            if(!fileInput.files[0]) return;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                const base64Image = await compressImage(fileInput.files[0]);
+
+                const newCar = {
+                    make: document.getElementById('u-make').value,
+                    model: document.getElementById('u-model').value,
+                    category: document.getElementById('u-cat').value,
+                    engine: document.getElementById('u-eng').value,
+                    hp: document.getElementById('u-hp').value,
+                    acc: document.getElementById('u-acc').value,
+                    spd: document.getElementById('u-spd').value,
+                    image: base64Image,
+                    timestamp: serverTimestamp()
+                };
+
+                await addDoc(collection(db, 'cars'), newCar);
+
+                bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                document.getElementById('uploadForm').reset();
+                alert("Car uploaded successfully!");
+
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerHTML = 'Upload Car';
+                btn.disabled = false;
+            }
+        });
+
+        // Global Helpers
+        window.setFilter = (cat) => {
+            currentFilter = cat;
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText === cat) btn.classList.add('active');
+            });
+            renderCars();
+        }
+
+        window.renderCars = () => {
+            const grid = document.getElementById('carGrid');
+            grid.innerHTML = '';
+
+            const filtered = currentFilter === 'All' 
+                ? allCars 
+                : allCars.filter(c => c.category === currentFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-12 text-center text-muted mt-5"><h5>No cars yet.</h5></div>`;
+                return;
+            }
+
+            filtered.forEach(car => {
+                const col = document.createElement('div');
+                col.className = 'col-sm-6 col-lg-4 col-xl-3';
+                col.innerHTML = `
+                    <div class="car-card" onclick='openDetail(${JSON.stringify(car).replace(/'/g, "&#39;")})'>
+                        <div class="img-container">
+                            <img src="${car.image}" loading="lazy">
+                        </div>
+                        <div class="card-body">
+                            <span class="car-category">${car.category}</span>
+                            <h3 class="car-title text-truncate">${car.make} ${car.model}</h3>
+                            <div class="car-meta d-flex justify-content-between mt-2">
+                                <span><i class="fas fa-horse me-1"></i>${car.hp}</span>
+                                <span><i class="fas fa-tachometer-alt me-1"></i>${car.acc}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(col);
+            });
+        }
+
+        window.openDetail = (car) => {
+            document.getElementById('d-img').src = car.image;
+            document.getElementById('d-cat').innerText = car.category;
+            document.getElementById('d-title').innerText = `${car.make} ${car.model}`;
+            document.getElementById('d-eng').innerText = car.engine;
+            document.getElementById('d-hp').innerText = car.hp;
+            document.getElementById('d-acc').innerText = car.acc;
+            document.getElementById('d-spd').innerText = car.spd;
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        }
+
+        window.openUploadModal = () => {
+            new bootstrap.Modal(document.getElementById('uploadModal')).show();
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
